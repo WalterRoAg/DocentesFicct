@@ -1,32 +1,32 @@
-# Imagen base de PHP 8.2 con Apache y extensiones necesarias
+# Imagen base PHP 8.2 con Apache
 FROM php:8.2-apache
 
-# Instalar dependencias del sistema y extensiones de PHP
+# Instalar dependencias del sistema y extensiones necesarias para Laravel
 RUN apt-get update && apt-get install -y \
-    git unzip libpq-dev && \
-    docker-php-ext-install pdo pdo_pgsql
+    git unzip zip libzip-dev libpq-dev libxml2-dev && \
+    docker-php-ext-install pdo pdo_pgsql zip xml
 
-# Habilitar módulo de reescritura para Laravel
+# Habilitar mod_rewrite (necesario para rutas Laravel)
 RUN a2enmod rewrite
 
-# Configurar directorio de trabajo
+# Establecer directorio de trabajo
 WORKDIR /var/www/html
 
-# Copiar archivos del proyecto
+# Copiar todos los archivos del proyecto
 COPY . /var/www/html
 
-# Instalar Composer
+# Copiar e instalar Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
-# Generar clave de Laravel
+# Generar la clave de aplicación de Laravel
 RUN php artisan key:generate --force || true
 
-# Establecer permisos adecuados
+# Establecer permisos correctos
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Exponer el puerto 80
 EXPOSE 80
 
-# Comando de inicio (Apache)
+# Iniciar Apache
 CMD ["apache2-foreground"]
