@@ -2,6 +2,7 @@ services:
   - type: web
     name: docentes-ficct
     env: php
+    rootDirectory: PortalDocenteFICCT-master
 
     buildCommand: |
       composer install --no-dev --optimize-autoloader
@@ -18,13 +19,13 @@ services:
       - key: APP_DEBUG
         value: "false"
       - key: APP_URL
-        value: https://docentes-ficct.onrender.com  # <- cámbiala cuando Render te asigne la URL
+        value: https://docentes-ficct.onrender.com  # cámbiala cuando Render te asigne la URL
       - key: APP_KEY
-        value: base64:PEGALA_AQUI  # <- genera con php artisan key:generate --show
+        value: base64:PEGALA_AQUI  # genera con php artisan key:generate --show
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
-        value: dpg-xxxxxx.render.com  # <- copia el host exacto de tu PostgreSQL
+        value: dpg-xxxxxx.render.com  # copia desde tu instancia PostgreSQL
       - key: DB_PORT
         value: "5432"
       - key: DB_DATABASE
@@ -33,3 +34,4 @@ services:
         value: dbuser
       - key: DB_PASSWORD
         value: TU_PASSWORD
+
