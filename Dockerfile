@@ -1,35 +1,44 @@
-# Imagen base PHP 8.2 con Apache
+# Imagen base con PHP 8.2 y Apache
 FROM php:8.2-apache
 
-# Paquetes del sistema + extensiones PHP necesarias
+# Evitar prompts interactivos
+ENV DEBIAN_FRONTEND=noninteractive
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
+# Instalar dependencias del sistema y extensiones PHP
 RUN apt-get update && apt-get install -y \
-    git unzip zip libzip-dev libpq-dev libxml2-dev && \
+    git unzip zip curl nodejs npm libpq-dev libzip-dev libxml2-dev && \
     docker-php-ext-install pdo pdo_pgsql zip xml && \
     a2enmod rewrite
 
+# Establecer el directorio de trabajo
 WORKDIR /var/www/html
-COPY . /var/www/html
 
-# Evitar warning de Composer como root
-ENV COMPOSER_ALLOW_SUPERUSER=1
+# Copiar todos los archivos del proyecto
+COPY . .
 
-# Instalar Composer (sin ejecutar scripts de Laravel en build)
+# Copiar e instalar Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-RUN composer install \
-    --no-dev \
-    --no-interaction \
-    --prefer-dist \
-    --optimize-autoloader \
-    --no-scripts
 
-# Asegurar que exista .env para que artisan lea variables
+# Instalar dependencias PHP sin ejecutar scripts
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts || true
+
+# Instalar dependencias frontend si existen package.json
+RUN if [ -f package.json ]; then npm install && npm run build || true; fi
+
+# Copiar archivo .env de ejemplo si no existe
 RUN cp -n .env.example .env || true
 
-# Generar clave y optimizar (ahora sí, ya con vendor listo)
+# Generar clave de Laravel y cachear configuración
 RUN php artisan key:generate --force || true
+RUN php artisan config:cache || true
+RUN php artisan route:cache || true
 
-# Permisos para storage y cache
+# Permisos para carpetas de almacenamiento
 RUN chown -R www-data:www-data storage bootstrap/cache
 
+# Exponer puerto 80
 EXPOSE 80
+
+# Comando de inicio
 CMD ["apache2-foreground"]
