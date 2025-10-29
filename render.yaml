@@ -17,4 +17,3 @@ services:
         value: false
       - key: APP_URL
         value: https://docentes-ficct.onrender.com
-
