@@ -1,32 +1,35 @@
 # Imagen base PHP 8.2 con Apache
 FROM php:8.2-apache
 
-# Instalar dependencias del sistema y extensiones necesarias para Laravel
+# Paquetes del sistema + extensiones PHP necesarias
 RUN apt-get update && apt-get install -y \
     git unzip zip libzip-dev libpq-dev libxml2-dev && \
-    docker-php-ext-install pdo pdo_pgsql zip xml
+    docker-php-ext-install pdo pdo_pgsql zip xml && \
+    a2enmod rewrite
 
-# Habilitar mod_rewrite (necesario para rutas Laravel)
-RUN a2enmod rewrite
-
-# Establecer directorio de trabajo
 WORKDIR /var/www/html
-
-# Copiar todos los archivos del proyecto
 COPY . /var/www/html
 
-# Copiar e instalar Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+# Evitar warning de Composer como root
+ENV COMPOSER_ALLOW_SUPERUSER=1
 
-# Generar la clave de aplicación de Laravel
+# Instalar Composer (sin ejecutar scripts de Laravel en build)
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --prefer-dist \
+    --optimize-autoloader \
+    --no-scripts
+
+# Asegurar que exista .env para que artisan lea variables
+RUN cp -n .env.example .env || true
+
+# Generar clave y optimizar (ahora sí, ya con vendor listo)
 RUN php artisan key:generate --force || true
 
-# Establecer permisos correctos
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# Permisos para storage y cache
+RUN chown -R www-data:www-data storage bootstrap/cache
 
-# Exponer el puerto 80
 EXPOSE 80
-
-# Iniciar Apache
 CMD ["apache2-foreground"]
