@@ -2,12 +2,34 @@ services:
   - type: web
     name: docentes-ficct
     env: php
+
     buildCommand: |
       composer install --no-dev --optimize-autoloader
-      php artisan key:generate --force || true
+      php artisan storage:link || true
+
     startCommand: vendor/bin/heroku-php-apache2 public/
+
+    postDeployCommand: |
+      php artisan migrate --force
+
     envVars:
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
         value: "false"
+      - key: APP_URL
+        value: https://docentes-ficct.onrender.com  # <- cámbiala cuando Render te asigne la URL
+      - key: APP_KEY
+        value: base64:PEGALA_AQUI  # <- genera con php artisan key:generate --show
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        value: dpg-xxxxxx.render.com  # <- copia el host exacto de tu PostgreSQL
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_DATABASE
+        value: db_docentes_ficct
+      - key: DB_USERNAME
+        value: dbuser
+      - key: DB_PASSWORD
+        value: TU_PASSWORD
