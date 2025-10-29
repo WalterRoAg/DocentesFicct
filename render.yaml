@@ -1,31 +1,16 @@
 services:
   - type: web
-    name: docentes-ficct
+    name: DocentesFicct
     env: php
+    region: oregon
+    plan: free
     buildCommand: |
       composer install --no-dev --optimize-autoloader
-      php artisan storage:link || true
+      php artisan key:generate --force || true
+      php artisan migrate --force || true
     startCommand: vendor/bin/heroku-php-apache2 public/
-    postDeployCommand: |
-      php artisan migrate --force
     envVars:
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
-        value: "false"
-      - key: APP_URL
-        value: https://docentes-ficct.onrender.com
-      - key: APP_KEY
-        value: base64:PEGALA_AQUI
-      - key: DB_CONNECTION
-        value: pgsql
-      - key: DB_HOST
-        value: dpg-xxxxxx.render.com
-      - key: DB_PORT
-        value: "5432"
-      - key: DB_DATABASE
-        value: db_docentes_ficct
-      - key: DB_USERNAME
-        value: dbuser
-      - key: DB_PASSWORD
-        value: TU_PASSWORD
+        value: false
