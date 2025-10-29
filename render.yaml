@@ -1,18 +1,13 @@
 services:
   - type: web
-    name: ficct-horarios
+    name: docentes-ficct
     env: php
-    rootDirectory: PortalDocenteFICCT-master   # <-- quita esta línea si mueves al root
     buildCommand: |
-      cd PortalDocenteFICCT-master || true
       composer install --no-dev --optimize-autoloader
       php artisan key:generate --force || true
-    startCommand: |
-      cd PortalDocenteFICCT-master || true
-      vendor/bin/heroku-php-apache2 public/
+    startCommand: vendor/bin/heroku-php-apache2 public/
     envVars:
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
         value: "false"
-      # agrega APP_KEY, DB_* aquí o desde el panel
